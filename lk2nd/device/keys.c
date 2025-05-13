@@ -24,6 +24,8 @@ struct lk2nd_keymap {
 };
 static struct lk2nd_keymap keymap[LK2ND_MAX_KEYS] = {0};
 
+int en_swap_vol_keys = -FDT_ERR_NOTFOUND;
+
 static bool target_powerkey(void)
 {
 	extern uint32_t pm8x41_get_pwrkey_is_pressed(void);
@@ -53,15 +55,29 @@ bool lk2nd_keys_pressed(uint32_t keycode)
 		return false;
 
 	/* fallback to default handlers only if the keycode wasn't set in the DT */
-	switch (keycode) {
-		case KEY_VOLUMEDOWN:
-			return target_volume_down();
-		case KEY_VOLUMEUP:
-			return target_volume_up();
-		case KEY_POWER:
-			return target_powerkey();
-		default:
-			return false;
+	if(en_swap_vol_keys != -FDT_ERR_NOTFOUND)
+	{
+		switch (keycode) {
+			case KEY_VOLUMEDOWN:
+				return target_volume_up();
+			case KEY_VOLUMEUP:
+				return target_volume_down();
+			case KEY_POWER:
+				return target_powerkey();
+			default:
+				return false;
+		}
+	} else {
+		switch (keycode) {
+			case KEY_VOLUMEDOWN:
+				return target_volume_down();
+			case KEY_VOLUMEUP:
+				return target_volume_up();
+			case KEY_POWER:
+				return target_powerkey();
+			default:
+				return false;
+		}
 	}
 }
 
@@ -90,6 +106,13 @@ static int lk2nd_keys_init(const void *dtb, int node)
 	int i = 0, subnode, keycode, len, ret;
 	struct gpiol_desc gpio;
 	const uint32_t *val;
+
+	fdt_getprop(dtb, node, "lk2nd,swap-volume-keys", &en_swap_vol_keys);
+
+	if(en_swap_vol_keys != -FDT_ERR_NOTFOUND) {
+		dprintf(INFO, "Swapping volume keys\n");
+		return 0;
+	}
 
 	dprintf(SPEW, " | label | code  | gpio        |\n");
 

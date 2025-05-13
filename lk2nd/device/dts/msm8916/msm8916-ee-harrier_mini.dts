@@ -38,4 +38,9 @@
 	compatible = "ee,harrier_mini";
 
 	lk2nd,dtb-files = "msm8916-ee-harrier_mini";
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		lk2nd,swap-volume-keys;
+	};
 };
